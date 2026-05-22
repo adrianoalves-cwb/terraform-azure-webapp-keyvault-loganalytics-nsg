@@ -1,0 +1,39 @@
+parameters:
+  workspace: ''
+  TFC_TOKEN: ''
+
+steps:
+
+- pwsh: |
+    choco install terraform
+    choco upgrade terraform
+    Write-Host "Installed terraform version:"
+    terraform -version
+  displayName: Install terraform
+  condition: eq(variables['Agent.OS'], 'Windows_NT')
+  
+- pwsh: |
+    $credential = "credentials `"app.terraform.io`" { token = `"$(TFC_TOKEN)`" }"
+
+    if ("$(Agent.OS)" -eq "Windows_NT") {
+      $path = "$env:APPDATA\terraform.rc"
+    } else {
+      $path = "$HOME/.terraformrc"
+    }
+
+    [IO.File]::WriteAllLines($path, $credential)
+  displayName: 'Authenticate in Terraform Cloud'
+
+- pwsh: |
+    $tfWorkspace = "${{ parameters.workspace }}"
+    Write-Host "##vso[task.setvariable variable=TF_WORKSPACE;]$tfWorkspace"
+    Write-Host "TF_WORKSPACE was set to: $tfWorkspace"
+  displayName: 'Set TF_WORKSPACE variable'
+
+- pwsh: terraform init
+  workingDirectory: '$(Pipeline.Workspace)/s/terraform/core'
+  displayName: 'Terraform init'
+
+- pwsh: terraform validate
+  workingDirectory: '$(Pipeline.Workspace)/s/terraform/core'
+  displayName: 'Terraform validate'

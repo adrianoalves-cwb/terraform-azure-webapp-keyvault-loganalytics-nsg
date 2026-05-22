@@ -1,0 +1,33 @@
+trigger: none
+
+resources:
+  repositories:
+  - repository: templates
+    type: github
+    name: VolvoGroup-Internal/devsecops-shared-azuredevops
+    ref: main
+    endpoint: Volvo-Group-Internal
+
+variables:
+  - group: csla-terraform
+  - name: terraformWorkspace
+    ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+      value: ctinvoic-prod
+    ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/qa') }}:
+      value: ctinvoic-qa
+
+pool: 
+  vmImage: 'windows-latest'
+stages:
+- stage: Terraform_Validation
+  jobs:
+  - job: QA_Workspace_Validation
+    steps:
+    - checkout: self
+
+    - template: /terraform-init.yaml
+      parameters:
+        workspace: $(terraformWorkspace)
+        TFC_TOKEN: $(TFC_TOKEN)
+        # It uses CSLA Terraform SQL DB template
+        use_csla_tf_template: false
