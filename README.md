@@ -1,133 +1,165 @@
-# Terraform Infrastructure (Production)
+# Terraform Azure WebApp + Key Vault + Log Analytics + NSG
 
-This repository contains Terraform code for provisioning and validating the application Azure infrastructure in Terraform Cloud workspaces.
+Enterprise-grade Terraform project designed to provision and manage Azure infrastructure components following Infrastructure as Code (IaC), security, monitoring, and governance best practices.
 
-## What This Deploys
+This repository demonstrates how to deploy a secure and scalable Azure Web Application environment integrated with Azure Key Vault, Log Analytics, and Network Security Groups (NSG) using Terraform.
 
-The configuration in [terraform/core](terraform/core) provisions:
+---
 
-1. Resource group.
-2. App Service Plan (Linux).
-3. Two Linux Web Apps:
-	- API app (.NET stack, VNet integration enabled).
-	- UI app (Node.js stack).
-4. Key Vault with configurable access policies.
-5. Log Analytics Workspace.
-6. Two Application Insights instances (API and UI) linked to the workspace.
-7. Monitor Action Group for Application Insights Smart Detection notifications.
-8. Network Security Group in the target resource group.
+# Architecture Overview
 
-It also reads an existing VNet/subnet from another resource group and uses that subnet for API web app VNet integration.
+```mermaid
+graph TD
+    User[Users / Applications] --> WebApp[Azure Web App]
 
-## Repository Structure
+    WebApp --> KeyVault[Azure Key Vault]
+    WebApp --> LogAnalytics[Azure Log Analytics Workspace]
 
-- [terraform/core/0-basic.tf](terraform/core/0-basic.tf): resource group.
-- [terraform/core/1-network.tf](terraform/core/1-network.tf): existing VNet/subnet lookups and NSG.
-- [terraform/core/2-webapp.tf](terraform/core/2-webapp.tf): service plan and API/UI web app modules.
-- [terraform/core/3-key_vault.tf](terraform/core/3-key_vault.tf): Key Vault module.
-- [terraform/core/4-application_insights.tf](terraform/core/4-application_insights.tf): Log Analytics, Application Insights modules, and action group.
-- [terraform/core/resources](terraform/core/resources): reusable Terraform modules.
-- [terraform-init.yaml](terraform-init.yaml): shared Azure DevOps Terraform init/auth/validate steps.
-- [yaml/terraform.yml](yaml/terraform.yml): Azure DevOps validation pipeline.
+    NSG[Network Security Group] --> WebApp
+```
 
-## Requirements
+---
 
-- Terraform version 1.6.0 or later.
-- Providers:
-  - hashicorp/azurerm >= 4.16.0
-  - azure/azapi >= 2.2.0
-- Access to Terraform Cloud organization VolvoGroup-Internal.
-- Azure permissions to create resources in the target resource group and read the referenced VNet/subnet resource group.
+# Enterprise Features
 
-## Required Input Variables
+* Infrastructure as Code (IaC) using Terraform
+* Azure Web App deployment
+* Azure Key Vault integration for secret management
+* Centralized monitoring with Azure Log Analytics
+* Network Security Group (NSG) configuration
+* Security-focused cloud architecture
+* Modular and reusable Terraform structure
+* Enterprise cloud governance foundations
+* Azure-native infrastructure provisioning
 
-Core variables are defined in [terraform/core/variables.tf](terraform/core/variables.tf).
+---
 
-### Identity and scope
+# Technologies Used
 
-- tenant_id
-- location
-- resource_group_name
-- tags
+* Terraform
+* Microsoft Azure
+* Azure Web App
+* Azure Key Vault
+* Azure Log Analytics
+* Azure Network Security Groups (NSG)
+* Azure Monitor
+* Infrastructure as Code (IaC)
 
-### Networking
+---
 
-- virtual_network_resource_group_name
-- virtual_network_name
-- subnet_name
-- network_security_group_name
+# Project Structure
 
-### App Service and apps
+```text
+.
+├── main.tf
+├── variables.tf
+├── outputs.tf
+├── provider.tf
+├── terraform.tfvars
+├── README.md
+```
 
-- service_plan_name
-- service_plan_os_type
-- service_plan_sku_name
-- web_app_api_name
-- web_app_api_app_settings
-- dotnet_version
-- web_app_ui_name
-- web_app_ui_app_settings
-- node_version
+---
 
-### Key Vault
+# Infrastructure Components
 
-- key_vault_name
-- key_vault_access_policies
+## Azure Web App
 
-### Observability
+Deploys an Azure Web Application environment designed for scalable and managed application hosting.
 
-- log_analytics_workspace_name
-- log_analytics_sku
-- log_analytics_retention_in_days
-- local_authentication_enabled
-- application_insights_api_name
-- application_insights_ui_name
-- appinsights_smart_detection_name
-- appinsights_smart_detection_short_name
-- appinsights_smart_detection_monitoring_contributor_id
-- appinsights_smart_detection_monitoring_reader_id
+## Azure Key Vault
 
-## Outputs
+Provides secure secret and configuration management for applications and services.
 
-Currently exposed outputs in [terraform/core/outputs.tf](terraform/core/outputs.tf):
+## Azure Log Analytics
 
-- resource_group_name
-- resource_group_location
+Centralized monitoring and log collection for operational visibility and troubleshooting.
 
-Module output in [terraform/core/resources/key_vault/outputs.tf](terraform/core/resources/key_vault/outputs.tf):
+## Network Security Group (NSG)
 
-- key_vault_id
+Implements network security controls and traffic filtering rules.
 
-## Local Workflow
+---
 
-Run from [terraform/core](terraform/core):
+# Security Considerations
 
-1. terraform init
-2. terraform validate
-3. terraform plan
-4. terraform apply
+This project follows cloud security and governance best practices, including:
 
-If you use Terraform Cloud remote execution, ensure the selected workspace has all required variables configured.
+* Centralized secret management using Azure Key Vault
+* Network traffic filtering using NSGs
+* Infrastructure provisioning through code
+* Separation of infrastructure configuration from application logic
+* Reproducible and auditable infrastructure deployments
+* Security-focused Azure architecture
 
-## CI Validation Pipeline
+---
 
-Pipeline definition: [yaml/terraform.yml](yaml/terraform.yml)
+# Example Deployment Flow
 
-What it does:
+```text
+Terraform Init
+    ↓
+Terraform Validate
+    ↓
+Terraform Plan
+    ↓
+Approval
+    ↓
+Terraform Apply
+    ↓
+Azure Resource Provisioning
+```
 
-1. Selects Terraform workspace by branch:
-	- main -> application-prod
-	- qa -> application-qa
-2. Runs shared steps from [terraform-init.yaml](terraform-init.yaml):
-	- Install/upgrade Terraform.
-	- Authenticate Terraform Cloud using TFC_TOKEN.
-	- Set TF_WORKSPACE.
-	- Run terraform init.
-	- Run terraform validate.
+---
 
-## Notes
+# CI/CD Integration Ideas
 
-- API web app uses the existing subnet for VNet integration.
-- UI web app does not set subnet integration in current configuration.
-- Both web apps are created with system-assigned managed identity.
-- Key Vault currently allows public network access and sets default_action to Allow in network ACLs.
+This repository can be integrated with Azure DevOps pipelines using:
+
+* Terraform fmt
+* Terraform validate
+* Terraform plan
+* Terraform apply
+* YAML multi-stage pipelines
+* Approval gates
+* Variable groups
+* SonarQube quality checks
+* DevSecOps governance workflows
+* Sonatype artifact governance
+
+---
+
+# Future Improvements
+
+* Modular Terraform structure
+* Multi-environment support (dev/qa/prod)
+* Remote Terraform backend configuration
+* Azure Managed Identity integration
+* Application Insights integration
+* Automated CI/CD deployment pipelines
+* RBAC role assignments
+* Azure Policy integration
+* Reusable Terraform modules
+
+---
+
+# Purpose
+
+This repository was created to demonstrate practical experience with:
+
+* Azure cloud infrastructure
+* Infrastructure as Code (IaC)
+* Enterprise cloud architecture
+* Terraform automation
+* Azure governance and security concepts
+* Enterprise DevOps practices
+* Monitoring and observability
+* Azure platform engineering
+
+---
+
+# Author
+
+Adriano Alves da Silva
+
+Infrastructure | Azure | DevOps | Terraform | PowerShell | Enterprise Automation
