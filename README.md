@@ -10,12 +10,11 @@ This repository demonstrates how to deploy a secure and scalable Azure Web Appli
 
 ```mermaid
 graph TD
-    User[Users / Applications] --> WebApp[Azure Web App]
+    User[Users / Applications] --> NSG[Network Security Group]
+    NSG --> WebApp[Azure Web App]
 
     WebApp --> KeyVault[Azure Key Vault]
     WebApp --> LogAnalytics[Azure Log Analytics Workspace]
-
-    NSG[Network Security Group] --> WebApp
 ```
 
 ---
